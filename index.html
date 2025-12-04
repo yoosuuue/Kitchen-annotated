@@ -10,31 +10,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* 기본 설정 */
+        /* 기본 설정 (기존과 동일) */
         body {
             background-color: #fff;
-            font-family: 'Comic Neue', cursive; /* 요청하신 폰트 적용 */
+            font-family: 'Comic Neue', cursive;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* 화면 꽉 차게 */
+            min-height: 100vh;
             margin: 0;
-            padding: 20px; /* 화면 가장자리 여백 */
+            padding: 20px;
             box-sizing: border-box;
         }
 
-        /* 2. 책을 감싸는 검은색 테두리 박스 */
+        /* 검은 테두리 박스 (펼침면 크기에 맞게 자동 조절) */
         .book-frame {
-            border: 1px solid black; /* 1px 검은 선 */
-            padding: 40px; /* 박스 안쪽 여백 (패딩) */
-            background-color: white; /* 박스 배경색 */
+            border: 1px solid black;
+            padding: 40px;
+            background-color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* 살짝 그림자 (선택사항) */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            /* 책이 펼쳐지면 너비가 늘어나도록 설정 */
+            width: fit-content; 
+            max-width: 100%; /* 화면을 넘지 않게 */
         }
 
-        /* 책 영역 */
+        /* 책 영역 스타일 */
         .page {
             background-color: white;
             padding: 0;
@@ -46,25 +49,31 @@
             object-fit: cover;
         }
 
-        /* 3. 하단 정보 바 (제목 + 페이지 컨트롤) */
+        /* ★ 우측 페이지 그림자 효과 추가 ★ */
+        /* 라이브러리가 만드는 클래스(.stf__item.--right)를 타겟팅 */
+        .stf__item.--right {
+            /* 책 안쪽(제본된 쪽)에 부드러운 내부 그림자를 줍니다 */
+            box-shadow: inset 20px 0 30px -15px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* 하단 정보 바 (기존과 동일) */
         .info-bar {
             width: 100%;
-            max-width: 1000px; /* 책 너비와 비슷하게 맞춤 */
+            /* 펼쳐진 너비에 맞게 꽉 차도록 수정 */
+            max-width: none; 
             display: flex;
-            justify-content: space-between; /* 양 끝 정렬 */
-            margin-top: 15px; /* 책과 정보 사이 간격 */
+            justify-content: space-between;
+            margin-top: 15px;
             font-size: 18px;
             font-weight: bold;
         }
 
         .controls {
             display: flex;
-            gap: 15px; /* 버튼과 숫자 사이 간격 */
+            gap: 15px;
             align-items: center;
-            cursor: pointer;
         }
         
-        /* 버튼 스타일 (텍스트처럼 보이게) */
         .btn {
             background: none;
             border: none;
@@ -74,28 +83,23 @@
             cursor: pointer;
             padding: 0;
         }
-        .btn:hover {
-            color: #555; /* 마우스 올렸을 때 색 변화 */
-        }
+        .btn:hover { color: #555; }
 
     </style>
 </head>
 <body>
 
     <div class="book-frame">
-        
         <div id="book"></div>
 
         <div class="info-bar">
             <div>Kitchen annotated</div>
-            
             <div class="controls">
                 <button class="btn" id="btn-first">&lt;&lt;</button>
                 <span id="page-display">1 / 165</span>
                 <button class="btn" id="btn-last">&gt;&gt;</button>
             </div>
         </div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
@@ -106,48 +110,48 @@
             const pageDisplay = document.getElementById('page-display');
             const totalPages = 165; 
 
-            // 1. 이미지 자동 생성 (1 ~ 165)
+            // 1. 이미지 자동 생성
             for (let i = 1; i <= totalPages; i++) {
                 const pageDiv = document.createElement('div');
                 pageDiv.className = 'page';
-                
                 const img = document.createElement('img');
                 img.src = `./images/${i}.jpg`; 
                 img.alt = `${i}페이지`;
                 img.loading = "lazy";
-                
                 pageDiv.appendChild(img);
                 bookElement.appendChild(pageDiv);
             }
 
             // 2. PageFlip 설정
             const pageFlip = new St.PageFlip(bookElement, {
-                width: 424,  // 원본(848)의 절반 너비 (한 페이지 기준)
-                height: 600, // 원본(1200)의 절반 높이 (비율 유지)
-                // 모바일/웹 반응형을 위해 크기를 살짝 줄였습니다. 
-                // 원본 크기대로 하려면 848, 1200을 넣으시면 됩니다.
-                
-                size: 'fixed', // 박스 안에 예쁘게 들어가려면 stretch보다 fixed가 나을 수 있습니다.
-                showCover: true,
+                // 한 페이지당 크기 (펼치면 너비가 2배가 됨)
+                width: 424,  
+                height: 600,
+                size: 'fixed',
+                // 모바일이 아닌 PC 환경에서는 자동으로 펼침면으로 보입니다.
+                // 표지(1페이지)만 혼자 보이고, 그 다음부터 두 장씩 보입니다.
+                showCover: true, 
             });
 
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
 
-            // 3. 페이지 넘길 때마다 숫자 업데이트 (현재 페이지 / 전체)
+            // 3. 페이지 숫자 업데이트
             pageFlip.on('flip', (e) => {
-                // e.data는 현재 페이지 인덱스 (0부터 시작) -> +1 해줌 (펼침면일 경우 +2 보정 필요할 수 있음)
-                // 이 라이브러리는 펼침면 기준 인덱스를 줍니다.
-                let currentPage = e.data + 1; 
-                pageDisplay.innerText = `${currentPage} / ${totalPages}`;
+                // 펼침면 모드에서는 보이는 두 페이지 중 오른쪽 페이지 번호를 기준으로 합니다.
+                // e.data는 인덱스(0부터)이므로 실제 페이지 번호 계산이 조금 다릅니다.
+                // 간단하게 현재 펼쳐진 페이지 중 가장 큰 번호를 표시합니다.
+                
+                const range = pageFlip.getOrientation() === 'portrait' ? [e.data] : [e.data, e.data + 1];
+                // 표지일 때와 아닐 때를 구분하여 정확한 끝 번호 계산
+                let displayPage = (e.data === 0) ? 1 : (e.data + 2 > totalPages ? totalPages : e.data + 2);
+
+                pageDisplay.innerText = `${displayPage} / ${totalPages}`;
             });
 
-            // 4. 버튼 기능 연결
-            // 첫 페이지로 (<<)
+            // 4. 버튼 기능
             document.getElementById('btn-first').addEventListener('click', () => {
                 pageFlip.flip(0);
             });
-
-            // 끝 페이지로 (>>)
             document.getElementById('btn-last').addEventListener('click', () => {
                 pageFlip.flip(totalPages - 1);
             });
